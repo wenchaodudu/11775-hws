@@ -8,19 +8,47 @@ import numpy as np
 import yaml
 import pickle
 import pdb
+import torch
+from torchvision import models
 
 
 hessian_threshold = 100
+model = models.vgg16(pretrained=True).cuda()
+classifier = list(model.classifier)
+def transform(x):
+    x = x.view(x.size(0), -1)
+    for y in [0, 1, 3]:
+        model = classifier[y]
+        x = model(x)
+    return x
 
 def get_surf_features_from_video(downsampled_video_filename, surf_feat_video_filename, keyframe_interval):
     "Receives filename of downsampled video and of output path for features. Extracts features in the given keyframe_interval. Saves features in pickled file."
     # TODO
-    surf = cv2.SURF(hessian_threshold)
     features = []
     for img in get_keyframes(downsampled_video_filename, keyframe_interval):
-        keypoints, descriptors = surf.detectAndCompute(img, None)
-        features.append(descriptors)
-    return features
+        features.append(img[np.newaxis, : ,: ,:])
+    if features:
+        features = np.vstack(features)
+        x_cent = features.shape[1] // 2
+        y_cent = features.shape[2] // 2
+        if x_cent < 112:
+            _features = np.zeros((features.shape[0], 224, features.shape[2], 3))
+            _features[:, 112-x_cent:112+x_cent, :, :] = features
+            features = _features
+            x_cent = 112
+        if y_cent < 112:
+            _features = np.zeros((features.shape[0], features.shape[1], 224, 3))
+            _features[:, :, 112-y_cent:112+y_cent, :] = features
+            features = _features
+            y_cent = 112
+        features = features[:, x_cent-112:x_cent+112, y_cent-112:y_cent+112, :]
+        batch_input = torch.from_numpy(features).permute(0, 3, 1, 2).float().cuda()
+        batch_feat = model.features(batch_input)
+        batch_feat = transform(batch_feat)
+        return batch_feat.detach().cpu().numpy()
+    else:
+        return features
 
 
 def get_keyframes(downsampled_video_filename, keyframe_interval):
@@ -77,4 +105,4 @@ if __name__ == '__main__':
         print(video_name)
         # Get SURF features for one video
         features = get_surf_features_from_video(downsampled_video_filename, surf_feat_video_filename, keyframe_interval)
-        np.save('surf/{}'.format(video_name), features)
+        np.save('cnn/{}'.format(video_name), features)
