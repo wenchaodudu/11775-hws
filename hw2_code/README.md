@@ -11,3 +11,31 @@ Here is an example of how to execute the script:
     
 As you already have functions to train kmeans and SVMs, we did not include those skeletons here.
 The main TODOs will be to write the function for SURF feature extraction and for CNN feature extraction. **You can reuse your code from HW1 for kmeans and SVM training.**
+
+Results:
+#####################################
+#       MED with MFCC Features      #
+#####################################
+=========  Event P001  =========
+Evaluating the average precision (AP)
+Average precision:  0.1835263835263835
+=========  Event P002  =========
+Evaluating the average precision (AP)
+Average precision:  0.4030178905178905
+=========  Event P003  =========
+Evaluating the average precision (AP)
+Average precision:  0.07496960528093448
+
+#####################################
+#       MED with ASR Features       #
+#####################################
+=========  Event P001  =========
+Evaluating the average precision (AP)
+Average precision:  0.9759432234432235
+=========  Event P002  =========
+Evaluating the average precision (AP)
+Average precision:  1.0
+=========  Event P003  =========
+Evaluating the average precision (AP)
+Average precision:  0.9999999999999998
+
